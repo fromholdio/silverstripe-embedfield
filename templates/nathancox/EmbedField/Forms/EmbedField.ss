@@ -1,4 +1,4 @@
-<a class='embed-thumbnail <% if ShowThumbnail %><% else %>empty<% end_if %>' target='_blank'>
+<a class='embed-thumbnail <% if $ShowThumbnail %><% else %>empty<% end_if %>' target='_blank'>
 <img src='$ThumbnailURL' id='{$ID}_Thumbnail' title='$ThumbnailTitle' alt='' />
 </a>
 
