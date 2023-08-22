@@ -23,11 +23,11 @@
                 this.parent().parent().find('button.action').removeClass('btn-outline-primary').removeClass('font-icon-tick').addClass('btn-primary').addClass('font-icon-rocket');
             },
 
-			onfocusout: function() {                
+			onfocusout: function() {
 				var newVal = this.val();
 
-				if (newVal != '' && newVal.substring(0, 7) != 'http://' && newVal.substring(0, 8) != 'https://') {
-					newVal = 'http://'+newVal;
+				if (newVal != '' && newVal.substring(0, 8) != 'https://') {
+					newVal = 'https://'+newVal;
 					this.val(newVal);
 				}
 
@@ -46,8 +46,9 @@
 					title: ''
 				});
 				this.closest('.form__field-holder').find('.embed-thumbnail').addClass('empty').removeAttr('href');
+                this.closest('.form__field-holder').find('.js-object-detail').empty();
 				this.val('');
-			}            
+			}
 		});
 
         $('.field.embed button.action').entwine({
@@ -56,7 +57,7 @@
             },
 
             onclick: function() {
-                var $field = $(this).siblings('.field.embed input.text');                
+                var $field = $(this).siblings('.field.embed input.text');
                 var params = {
                     'SecurityID': $('input[name=SecurityID]').val(),
                     'URL': $field.val()
@@ -71,19 +72,26 @@
                     $field.css('background-image', 'none');
                     var $messageEl = $('#'+$field.data('message-el-id'));
                     $messageEl.html(response.message);
-                    
+
                     if (response.status == 'success') {
                         var data = response.data;
                         var $imageEl = $('#'+$field.data('thumbnail-id'));
 
-                        $field.closest('.form__field-holder').find('.embed-thumbnail').removeClass('empty').attr('href', $field.val());
                         $field.closest('.form__field-holder').find('button').html('Update URL').removeClass('font-icon-rocket').removeClass('btn-primary').addClass('font-icon-tick').addClass('btn-outline-primary');
                         $field.closest('.form__field-holder').find('input.text').prop('disabled', false).removeClass('error');
+                        $field.closest('.form__field-holder').find('.js-object-detail').html(data.Details);
 
-                        $imageEl.attr({
-                            src: data.ThumbnailURL,
-                            title: data.Title
-                        });
+                        if (data.ThumbnailURL) {
+                            $field.closest('.form__field-holder').removeClass('embed-thumbnail-none');
+                            $field.closest('.form__field-holder').find('.embed-thumbnail').removeClass('empty').attr('href', $field.val());
+                            $imageEl.attr({
+                                src: data.ThumbnailURL,
+                                title: data.Title
+                            });
+                        }
+                        else {
+                            $field.closest('.form__field-holder').addClass('embed-thumbnail-none');
+                        }
                     } else if (response.status == 'invalidurl' || response.status == 'nourl') {
                         $field.val($field.data('original-value'));
                         $field.closest('.form__field-holder').find('input.text').prop('disabled', false).addClass('error');
