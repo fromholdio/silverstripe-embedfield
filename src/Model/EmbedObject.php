@@ -1,6 +1,6 @@
 <?php
 
-namespace nathancox\EmbedField\Model;
+namespace Fromholdio\EmbedField\Model;
 
 use SilverStripe\ORM\DataObject;
 use Embed\Embed;

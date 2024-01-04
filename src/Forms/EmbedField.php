@@ -1,6 +1,6 @@
 <?php
 
-namespace nathancox\EmbedField\Forms;
+namespace Fromholdio\EmbedField\Forms;
 
 use SilverStripe\Forms\FormField;
 use SilverStripe\View\Requirements;
@@ -8,7 +8,7 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Security\SecurityToken;
 use SilverStripe\ORM\DataObjectInterface;
-use nathancox\EmbedField\Model\EmbedObject;
+use Fromholdio\EmbedField\Model\EmbedObject;
 
 /**
  * The form field used for creating EmbedObjects.  Basically you enter a URL and it fetches the oEmbed data from it and stores it in an EmbedObject.
@@ -36,8 +36,8 @@ class EmbedField extends FormField
 
 	public function FieldHolder($properties = [])
     {
-		Requirements::javascript('nathancox/embedfield: javascript/EmbedField.js');
-		Requirements::css('nathancox/embedfield: css/EmbedField.css');
+		Requirements::javascript('fromholdio/silverstripe-embedfield: client/js/EmbedField.js');
+		Requirements::css('fromholdio/silverstripe-embedfield: client/css/EmbedField.css');
 
 		if (!$this->object || $this->object->ID == 0) {
 			$this->object = EmbedObject::create();
