@@ -37,6 +37,7 @@ class EmbedField extends FormField
 
     public function getSourceURLField(): TextField
     {
+        $sourceURL = $this->sourceURL ?? $this->object->SourceURL;
         $sourceURLField = TextField::create($this->getName() . '[sourceurl]', '', $sourceURL);
         $sourceURLField->setAttribute('data-update-url', $this->Link('update'));
         $sourceURLField->setAttribute('placeholder', 'https://');
