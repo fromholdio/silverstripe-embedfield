@@ -43,6 +43,14 @@ class EmbedField extends FormField
         return $sourceURLField;
     }
 
+    public function getEmbedObject(): EmbedObject
+    {
+        if (!$this->object || $this->object->ID == 0) {
+            $this->object = EmbedObject::create();
+        }
+        return $this->object;
+    }
+
     public function getThumbnail(): ?ArrayData
     {
         $data = null;
