@@ -1,5 +1,5 @@
-<a class='embed-thumbnail <% if $ShowThumbnail %><% else %>empty<% end_if %>' target='_blank'>
-    <img src='$ThumbnailURL' id='{$ID}_Thumbnail' title='$ThumbnailTitle' alt='' />
+<a class='embed-thumbnail <% if not $Thumbnail %>empty<% end_if %>' target='_blank'>
+    <img src='$Thumbnail.URL' id='{$ID}_Thumbnail' title='$Thumbnail.Title' alt='' />
 </a>
 
 <div class="fieldholder-small">

@@ -3,6 +3,7 @@
 namespace Fromholdio\EmbedField\Forms;
 
 use SilverStripe\Forms\FormField;
+use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Control\HTTPRequest;
@@ -42,31 +43,24 @@ class EmbedField extends FormField
         return $sourceURLField;
     }
 
+    public function getThumbnail(): ?ArrayData
+    {
+        $data = null;
+        $obj = $this->getEmbedObject();
+        if ($obj->ThumbnailURL) {
+            $data = ArrayData::create([
+                'URL' => $obj->ThumbnailURL,
+                'Title' => $obj->Title,
+            ]);
+        }
+        return $data;
+    }
+
 	public function FieldHolder($properties = [])
     {
 		Requirements::javascript('fromholdio/silverstripe-embedfield: client/js/EmbedField.js');
 		Requirements::css('fromholdio/silverstripe-embedfield: client/css/EmbedField.css');
-
-		if (!$this->object || $this->object->ID == 0) {
-			$this->object = EmbedObject::create();
-		}
-
-		$properties['ThumbnailURL'] = false;
-		$properties['ThumbnailTitle'] = '';
-		$properties['ShowThumbnail'] = false;
-
-        $sourceURL = $this->sourceURL ?? $this->object->SourceURL;
-
-		if ($this->object->ThumbnailURL) {
-			$properties['ThumbnailURL'] = $this->object->ThumbnailURL;
-			$properties['ThumbnailTitle'] = $this->object->Title;
-			$properties['ShowThumbnail'] = true;
-		}
-
-        $properties['EmbedObject'] = $this->object;
-
-		$field = parent::FieldHolder($properties);
-		return $field;
+		return parent::FieldHolder($properties);
 	}
 
 	public function Type(): string
