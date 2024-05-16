@@ -21,10 +21,10 @@
 			"Fromholdio\\OEmbedField\\": "src/"
 		}
 	},
-	"extra": {
-		"expose": [
-			"css",
-			"javascript"
-		]
-	}
+    "extra": {
+        "expose": [
+            "client/css",
+            "client/js"
+        ]
+    },
 }
