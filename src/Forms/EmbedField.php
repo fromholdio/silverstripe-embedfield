@@ -34,6 +34,14 @@ class EmbedField extends FormField
         return $this;
 	}
 
+    public function getSourceURLField(): TextField
+    {
+        $sourceURLField = TextField::create($this->getName() . '[sourceurl]', '', $sourceURL);
+        $sourceURLField->setAttribute('data-update-url', $this->Link('update'));
+        $sourceURLField->setAttribute('placeholder', 'https://');
+        return $sourceURLField;
+    }
+
 	public function FieldHolder($properties = [])
     {
 		Requirements::javascript('fromholdio/silverstripe-embedfield: client/js/EmbedField.js');
@@ -48,10 +56,6 @@ class EmbedField extends FormField
 		$properties['ShowThumbnail'] = false;
 
         $sourceURL = $this->sourceURL ?? $this->object->SourceURL;
-
-		$properties['SourceURL'] = TextField::create($this->getName() . '[sourceurl]', '', $sourceURL);
-		$properties['SourceURL']->setAttribute('data-update-url', $this->Link('update'));
-		$properties['SourceURL']->setAttribute('placeholder', 'https://');
 
 		if ($this->object->ThumbnailURL) {
 			$properties['ThumbnailURL'] = $this->object->ThumbnailURL;

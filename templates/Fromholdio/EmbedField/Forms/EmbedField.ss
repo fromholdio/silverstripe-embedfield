@@ -6,7 +6,7 @@
     <div class="js-object-detail">
         $EmbedObject.DetailsForField
     </div>
-    $SourceURL
+    $SourceURLField
     <em id='{$ID}_message' class='embedfield-message'></em>
     <button
         type="button"
