@@ -44,7 +44,9 @@ class EmbedObject extends DataObject
 
     public function getTypeLabel(): string
     {
-        switch ($this->Type) {
+        $type = $this->Type;
+        if (empty($type)) $type = 'Unknown';
+        switch ($type) {
             case 'video':
                 return 'Video';
             case 'rich':
@@ -54,7 +56,7 @@ class EmbedObject extends DataObject
             case 'photo':
                 return 'Image';
             default:
-                return $this->Type;
+                return $type;
         }
     }
 
