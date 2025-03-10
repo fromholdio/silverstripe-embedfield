@@ -5,7 +5,7 @@ This field is designed to let users attached an oembed object (eg a YouTube vide
 
 This originally built upon the work of [SilverStripe Embed Field nathancox/embedfield](https://github.com/nathancox/silverstripe-embedfield) which had been quiet for several years.
 
-**As of v5 the field has been converted to a React-driven form field, enabling use inline in Elemental blocks.**
+**As of v4.1 the field has been converted to a React-driven form field, enabling use inline in Elemental blocks.**
 
 Requirements
 ------------

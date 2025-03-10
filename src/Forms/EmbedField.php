@@ -4,12 +4,14 @@ namespace Fromholdio\EmbedField\Forms;
 
 use Fromholdio\EmbedField\Model\EmbedObject;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Core\Validation\ConstraintValidator;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\UrlField;
+use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObjectInterface;
 use SilverStripe\Security\SecurityToken;
+use Symfony\Component\Validator\Constraints\Url;
 
-class EmbedField extends UrlField
+class EmbedField extends TextField
 {
     private static $allowed_actions = [
         'preview',
@@ -82,6 +84,20 @@ class EmbedField extends UrlField
         }
         $this->setEmbedObject($embedObject);
         return parent::setValue($sourceURL, $data);
+    }
+
+    public function validate($validator)
+    {
+        $result = true;
+        if ($this->value && !ConstraintValidator::validate($this->value, new Url())->isValid()) {
+            $validator->validationError(
+                $this->name,
+                _t(__CLASS__ . '.INVALID', 'Please enter a valid URL'),
+                'validation'
+            );
+            $result = false;
+        }
+        return $this->extendValidationResult($result, $validator);
     }
 
     public function saveInto(DataObjectInterface $record): void
