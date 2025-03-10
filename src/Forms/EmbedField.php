@@ -2,207 +2,214 @@
 
 namespace Fromholdio\EmbedField\Forms;
 
-use SilverStripe\Forms\FormField;
-use SilverStripe\View\ArrayData;
-use SilverStripe\View\Requirements;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Security\SecurityToken;
-use SilverStripe\ORM\DataObjectInterface;
 use Fromholdio\EmbedField\Model\EmbedObject;
+use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\UrlField;
+use SilverStripe\ORM\DataObjectInterface;
+use SilverStripe\Security\SecurityToken;
 
-/**
- * The form field used for creating EmbedObjects.  Basically you enter a URL and it fetches the oEmbed data from it and stores it in an EmbedObject.
- */
-class EmbedField extends FormField
+class EmbedField extends UrlField
 {
-	public $embedType = false;		// video, rich, link, photo
+    private static $allowed_actions = [
+        'preview',
+    ];
 
-	private static $allowed_actions = array(
-		'update'
-	);
+    protected $schemaComponent = 'EmbedField';
 
-	protected ?EmbedObject $object = null;
-    protected ?string $sourceURL = null;
+    protected $schemaDataType = FormField::SCHEMA_DATA_TYPE_CUSTOM;
 
-	/**
-	 * Restrict what type of embed object
-	 * @param string   The embed type (false (any), video, rich, link or photo)
-	 */
-	function setEmbedType($type = false): self
+    protected ?EmbedObject $embedObject = null;
+
+    protected ?array $allowedEmbedTypes = null;
+
+    public function setEmbedType(?string $type): static
     {
-		$this->embedType = $type;
+        $this->allowedEmbedTypes = empty($type) ? null : [$type];
         return $this;
-	}
-
-    public function getSourceURLField(): TextField
-    {
-        $sourceURL = $this->sourceURL ?? $this->object->SourceURL;
-        $sourceURLField = TextField::create($this->getName() . '[sourceurl]', '', $sourceURL);
-        $sourceURLField->setAttribute('data-update-url', $this->Link('update'));
-        $sourceURLField->setAttribute('placeholder', 'https://');
-        return $sourceURLField;
     }
 
-    public function getEmbedObject(): EmbedObject
+    public function setAllowedEmbedTypes(array|string $types): static
     {
-        if (!$this->object || $this->object->ID == 0) {
-            $this->object = EmbedObject::create();
+        if (empty($types)) {
+            $types = null;
         }
-        return $this->object;
+        elseif (is_string($types)) {
+            $types = [$types];
+        }
+        $this->allowedEmbedTypes = $types;
+        return $this;
     }
 
-    public function getThumbnail(): ?ArrayData
+    public function getAllowedEmbedTypes(): ?array
     {
-        $data = null;
-        $obj = $this->getEmbedObject();
-        if ($obj->ThumbnailURL) {
-            $data = ArrayData::create([
-                'URL' => $obj->ThumbnailURL,
-                'Title' => $obj->Title,
-            ]);
+        return $this->allowedEmbedTypes;
+    }
+
+    public function isAllowedEmbedType(?string $type): bool
+    {
+        $types = $this->getAllowedEmbedTypes();
+        return !empty($type)
+            && (is_null($types) || in_array($type, $types));
+    }
+
+    public function getEmbedObject(): ?EmbedObject
+    {
+        return $this->embedObject;
+    }
+
+    protected function setEmbedObject(?EmbedObject $embedObject): static
+    {
+        $this->embedObject = $embedObject;
+        return $this;
+    }
+
+    public function setValue($value, $data = null): static
+    {
+        $embedObject = null;
+        $sourceURL = null;
+        if ($value instanceof EmbedObject) {
+            $embedObject = $value;
         }
+        elseif (is_numeric($value)) {
+            $embedObject = EmbedObject::get()->byID($value);
+        }
+        elseif (is_string($value) && !empty($value)) {
+            $sourceURL = $value;
+        }
+        if (!is_null($embedObject)) {
+            $sourceURL = $embedObject?->SourceURL;
+        }
+        $this->setEmbedObject($embedObject);
+        return parent::setValue($sourceURL, $data);
+    }
+
+    public function saveInto(DataObjectInterface $record): void
+    {
+        parent::saveInto($record);
+
+        $embedObject = null;
+        $value = $this->dataValue();
+
+        $fieldName = $this->getName();
+        $currID = (int) $record->$fieldName;
+        $currEmbedObject = EmbedObject::get()->byID($currID);
+        $currSourceURL = $currEmbedObject?->SourceURL;
+
+        $doDeleteCurr = true;
+
+        if (!empty($value))
+        {
+            if ($currSourceURL === $value) {
+                $embedObject = $currEmbedObject;
+                $doDeleteCurr = false;
+            }
+            else {
+                $embedObject = EmbedObject::create();
+                $embedObject->SourceURL = $value;
+            }
+        }
+
+        $embedObjectID = $embedObject?->ID;
+        if ($embedObjectID === 0) {
+            $embedObject->write();
+            $embedObjectID = $embedObject->ID;
+        }
+
+        $this->setEmbedObject($embedObject);
+
+        if ($doDeleteCurr) {
+            $currEmbedObject?->delete();
+        }
+
+        $record->setCastedField($fieldName, $embedObjectID ?? 0);
+    }
+
+    public function getAttributes(): array
+    {
+        return [
+            ...parent::getAttributes(),
+            'placeholder' => 'https://',
+        ];
+    }
+
+    public function Type(): string
+    {
+        return 'embed text url';
+    }
+
+    public function preview(HTTPRequest $request): ?string
+    {
+        if (!SecurityToken::inst()->checkRequest($request)) {
+            return static::build_preview_response(
+                'security',
+                'Security token mismatch. Please refresh the page and try again.',
+            );
+        }
+
+        $data = json_decode($request->getBody(), true);
+        $sourceURL = $data['source_url'] ?? null;
+        if (empty($sourceURL)) {
+            return static::build_preview_response('empty');
+        }
+
+        $embedData = EmbedObject::retrieve_data_from_url($sourceURL);
+
+        if (is_null($embedData)) {
+            return static::build_preview_response(
+                'badformat',
+                'Please provide a valid URL.',
+            );
+        }
+
+        if (empty($embedData)) {
+            return static::build_preview_response(
+                'nomatch',
+                'Please provide a URL for a valid embed source.',
+            );
+        }
+
+        if (!$this->isAllowedEmbedType($embedData['type'])) {
+            return static::build_preview_response(
+                'badtype',
+                'Please provide a URL from a valid source type.'
+            );
+        }
+
+        return static::build_preview_response(
+            'success',
+            '',
+            $embedData,
+        );
+    }
+
+    protected static function build_preview_response(string $status, string $message = '', array $data = []): string
+    {
+        return json_encode([
+            'status' => $status,
+            'message' => $message,
+            'data' => $data,
+        ]);
+    }
+
+    protected function PreviewLink(?string $action = null): string
+    {
+        return '/' . ltrim($this->Link('preview'), '/');
+    }
+
+    public function getSchemaStateDefaults()
+    {
+        return [
+            ...parent::getSchemaStateDefaults(),
+            'previewURL' => $this->PreviewLink(),
+            'embedData' => $this->getEmbedObject()?->getEmbedData(),
+        ];
+    }
+
+    public function getSchemaDataDefaults()
+    {
+        $data = parent::getSchemaDataDefaults();
+        $data['data']['placeholder'] = 'https://';
         return $data;
     }
-
-	public function FieldHolder($properties = [])
-    {
-		Requirements::javascript('fromholdio/silverstripe-embedfield: client/js/EmbedField.js');
-		Requirements::css('fromholdio/silverstripe-embedfield: client/css/EmbedField.css');
-		return parent::FieldHolder($properties);
-	}
-
-	public function Type(): string
-    {
-		return 'embed text';
-	}
-
-	public function setValue($value, $data = null): self
-    {
-		if ($value instanceof EmbedObject) {
-			$this->object = $value;
-			parent::setValue($this->object->ID);
-
-		}
-		$this->object = EmbedObject::get()->byID($value);
-
-		return parent::setValue($value);
-	}
-
-	public function saveInto(DataObjectInterface $record): void
-    {
-		$val = $this->Value();		// array[sourceurl],[data] (as json)
-
-		$name = $this->getName();
-		$sourceURL = $val['sourceurl'];
-
-		$existingID = (int)$record->$name;
-
-		$originalObject = EmbedObject::get()->byID($existingID);
-		if (empty($sourceURL)) {
-			$record->$name = 0;
-			if ($originalObject) {
-				$originalObject->delete();
-			}
-			return;
-		}
-
-		if ($originalObject?->SourceURL == $sourceURL)
-        {
-			// nothing has changed
-			$object = $originalObject;
-		}
-        else {
-			$existing = EmbedObject::get()->filter('SourceURL', $sourceURL)->first();
-			if ($existing) {
-				// save URL as an existing object
-				$object = clone $existing;
-				$object->ID = 0;
-				$object->sourceExists = true;
-			} else {
-				// brand new source
-				$object = EmbedObject::create();
-				$object->SourceURL = $sourceURL;
-				$object->updateFromURL();
-			}
-		}
-
-		// delete the original object
-		if ($originalObject && $originalObject->ID != $object->ID) {
-			$originalObject->delete();
-		}
-
-		// write the new object
-		if ($object->ID == 0) {
-			$object->write();
-		}
-
-		$this->object = $object;
-		$record->$name = $this->object->ID;
-	}
-
-	public function update(HTTPRequest $request)
-    {
-		if (!SecurityToken::inst()->checkRequest($request)) {
-			return '';
-		}
-		$sourceURL = $request->postVar('URL');
-        $this->sourceURL = $sourceURL;
-
-		if (!empty($sourceURL))
-        {
-            // brand new source
-            $object = EmbedObject::create();
-            $object->SourceURL = $sourceURL;
-            try {
-                $object->updateFromURL();
-            }
-            catch (\Exception $e) {
-                return json_encode([
-                    'status' => 'invalidurl',
-                    'message' => 'Please provide a correctly formatted URL.',
-                    'data' => []
-                ]);
-            }
-
-			if ($object->sourceExists())
-            {
-				if ($this->embedType && $this->embedType != $object->Type) {
-                    return json_encode([
-                        'status' => 'invalidurl',
-                        'message' => 'Please provide a URL from a valid source type.',
-                        'data' => []
-                    ]);
-				}
-
-                return json_encode([
-                    'status' => 'success',
-                    'message' => '',
-                    'data' => [
-                        'ThumbnailURL' => $object->ThumbnailURL,
-                        'Width' => $object->Width,
-                        'Height' => $object->Height,
-                        'Title' => $object->Title,
-                        'Details' => $object->getDetailsForField()?->getValue()
-                    ]
-                ]);
-			}
-            else {
-                return json_encode([
-                    'status' => 'invalidurl',
-                    'message' => 'Please provide a URL that is a valid embed source.',
-                    'data' => []
-                ]);
-			}
-		}
-        else {
-            return json_encode([
-                'status' => 'nourl',
-                'message' => '',
-                'data' => []
-            ]);
-		}
-
-	}
-
 }

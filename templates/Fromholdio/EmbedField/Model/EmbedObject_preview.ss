@@ -1,3 +1,6 @@
+<a href="$URL" class="embed-thumbnail <% if not $ThumbnailURL %>empty<% end_if %>" target="_blank">
+    <img src="$ThumbnailURL" alt="">
+</a>
 <div class="embed-object-detail">
     <strong>Type:</strong> $TypeLabel<% if $ProviderName %> - <% if $ProviderURL %><a href="$ProviderURL" target="_blank">$ProviderName</a><% else %>$ProviderName<% end_if %><% end_if %>
     <% if $Title %>

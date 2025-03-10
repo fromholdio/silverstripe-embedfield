@@ -3,7 +3,7 @@
 	"description": "A form field for adding oembed objects to pages or dataobjects",
 	"type": "silverstripe-vendormodule",
 	"homepage": "https://github.com/fromholdio/silverstripe-embedfield",
-	"keywords": ["silverstripe", "oembed", "video", "cms", "formfield"],
+	"keywords": ["silverstripe", "oembed", "video", "cms", "formfield", "react"],
 	"license": "BSD-3-Clause",
 	"authors": [
 		{"name": "Luke Fromhold","email": "luke@fromhold.io"},
@@ -18,13 +18,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Fromholdio\\OEmbedField\\": "src/"
+			"Fromholdio\\EmbedField\\": "src/"
 		}
 	},
     "extra": {
         "expose": [
-            "client/css",
-            "client/js"
+            "client/dist"
         ]
     }
 }

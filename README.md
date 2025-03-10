@@ -3,11 +3,9 @@ SilverStripe Embed Field
 
 This field is designed to let users attached an oembed object (eg a YouTube video) to a page or dataobject.  It stores the oembed result information in an EmbedObject for easy access from the template (or wherever you want it).
 
-This is largely built upon the work of [SilverStripe Embed Field nathancox/embedfield](https://github.com/nathancox/silverstripe-embedfield) which has been quiet for several years.
+This originally built upon the work of [SilverStripe Embed Field nathancox/embedfield](https://github.com/nathancox/silverstripe-embedfield) which had been quiet for several years.
 
-**This version 4.x changes the composer package vendor & name, and the namespace of the EmbedObject and EmbedField classes.**
-
-This has styling updates, Silverstripe v5 and Embed/Embed v4 compatibility and enhancements, and a few other minor tweaks.
+**As of v4.1 the field has been converted to a React-driven form field, enabling use inline in Elemental blocks.**
 
 Requirements
 ------------
@@ -51,3 +49,17 @@ namespace {
 ```
 
 In the page template the video can now be embedded with `$MyVideo`.
+
+### Form field screenshots
+
+* User inputs URL, and can click Preview to retrieve embed meta information (or learn the URL is invalid)
+* On save, if valid, embed data is retrieved and saved into an `EmbedObject`, attached to the has_one populating the field
+* On load, if EmbedObject exists, the embed meta preview is automatically displayed 
+
+#### Inline Elemental
+
+![Inline Elemental](./docs/sshot-elemental.png)
+
+#### Regular Page CMS fields
+
+![Regular CMS fields](./docs/sshot-page.png)

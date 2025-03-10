@@ -1,0 +1,8 @@
+---
+Name: fio-embedfield
+---
+SilverStripe\Admin\LeftAndMain:
+  extra_requirements_javascript:
+    - 'fromholdio/silverstripe-embedfield: client/dist/js/bundle.js'
+  extra_requirements_css:
+    - 'fromholdio/silverstripe-embedfield: client/dist/styles/bundle.css'
